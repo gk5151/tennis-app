@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ソフトテニス</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#16223a;color:#eef3f9;font-family:Arial,"Noto Sans JP",sans-serif}
+button,input{font:inherit}
+.hidden{display:none!important}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:min(360px,100%);background:#1f2f47;border:1px solid #31445e;border-radius:12px;padding:28px}
+.login-card h1{text-align:center;font-size:20px;margin:0 0 20px}
+.login-card input{width:100%;padding:11px;border-radius:7px;border:1px solid #31445e;background:#16223a;color:#eef3f9;outline:none}
+.login-card button{width:100%;margin-top:10px;padding:11px;border:0;border-radius:7px;background:#ffd166;color:#16223a;font-weight:700;cursor:pointer}
+.error{text-align:center;color:#ff8787;font-size:12px;margin:10px 0 0}
+header{border-bottom:1px solid #31445e;background:#16223a}
+.nav{max-width:1000px;margin:auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:700}
+.logout{background:#1f2f47;color:#c9d6e3;border:1px solid #31445e;border-radius:7px;padding:7px 11px;cursor:pointer}
+main{max-width:1000px;margin:auto;padding:30px 18px}
+.home-title{margin:0 0 8px;font-size:26px}
+.home-sub{margin:0 0 24px;color:#93a9c2;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:#1f2f47;border:1px solid #31445e;border-radius:12px;padding:20px;cursor:pointer}
+.card:hover{border-color:#607796}
+.card h2{font-size:17px;margin:0 0 8px}
+.card p{font-size:13px;line-height:1.6;color:#93a9c2;margin:0}
+.page{display:none}.page.active{display:block}
+.back{background:none;border:0;color:#ffd166;padding:0;margin:0 0 18px;cursor:pointer}
+@media(max-width:600px){main{padding:22px 12px}.home-title{font-size:22px}}
+</style>
+</head>
+<body>
+
+<section id="login" class="login">
+  <div class="login-card">
+    <h1>ソフトテニス</h1>
+    <form id="loginForm">
+      <input id="password" type="password" placeholder="パスワード" autocomplete="current-password">
+      <button type="submit">入室</button>
+      <p id="error" class="error hidden">パスワードが違います</p>
+    </form>
+  </div>
+</section>
+
+<div id="site" class="hidden">
+<header>
+  <div class="nav">
+    <div class="brand">ソフトテニス</div>
+    <button class="logout" id="logout">退出</button>
+  </div>
+</header>
+
+<main>
+  <section id="homePage" class="page active">
+    <h1 class="home-title">ソフトテニス</h1>
+    <p class="home-sub">シミュレーターや資料をまとめています。</p>
+    <div class="grid">
+      <div class="card" data-page="simulator">
+        <h2>前衛ポジショニング</h2>
+        <p>コート上の位置をシミュレーションします。</p>
+      </div>
+      <div class="card" data-page="tactics">
+        <h2>戦術</h2>
+        <p>戦術やポジショニングの考え方をまとめます。</p>
+      </div>
+      <div class="card" data-page="practice">
+        <h2>練習メニュー</h2>
+        <p>練習方法や目的をまとめます。</p>
+      </div>
+      <div class="card" data-page="notes">
+        <h2>資料</h2>
+        <p>資料やメモをまとめます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="simulatorPage" class="page">
+    <button class="back" data-page="home">← 戻る</button>
+    <div id="simulatorRoot"></div>
+  </section>
+
+  <section id="tacticsPage" class="page">
+    <button class="back" data-page="home">← 戻る</button>
+    <h1>戦術</h1>
+    <p>ここに戦術を追加できます。</p>
+  </section>
+
+  <section id="practicePage" class="page">
+    <button class="back" data-page="home">← 戻る</button>
+    <h1>練習メニュー</h1>
+    <p>ここに練習メニューを追加できます。</p>
+  </section>
+
+  <section id="notesPage" class="page">
+    <button class="back" data-page="home">← 戻る</button>
+    <h1>資料</h1>
+    <p>ここに資料を追加できます。</p>
+  </section>
+</main>
+</div>
+
+<script>
+const SITE_PASSWORD="gk5151";
+const login=document.getElementById("login");
+const site=document.getElementById("site");
+const error=document.getElementById("error");
+
+function openSite(){login.classList.add("hidden");site.classList.remove("hidden");}
+
+document.getElementById("loginForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  if(document.getElementById("password").value===SITE_PASSWORD){
+    sessionStorage.setItem("stp_authed","1");
+    error.classList.add("hidden");
+    openSite();
+  }else error.classList.remove("hidden");
+});
+
+function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(name+"Page").classList.add("active");
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll("[data-page]").forEach(el=>{
+  el.addEventListener("click",()=>showPage(el.dataset.page));
+});
+
+document.getElementById("logout").addEventListener("click",()=>{
+  sessionStorage.removeItem("stp_authed");
+  location.reload();
+});
+
+if(sessionStorage.getItem("stp_authed")==="1") openSite();
+</script>
+
+<script type="text/babel">
+import { useState, useRef, useCallback, useEffect } from "react";
+
+// ソフトテニスコート寸法 (メートル) ― テニスと同一サイズ
+const COURT = {
+  width: 10.97,        // ダブルス幅
+  halfLength: 11.885,  // ネットからベースラインまで
+  serviceLine: 6.40,   // ネットからサービスラインまで
+  singlesWidth: 8.23,  // シングルス幅
+  sideMargin: (10.97 - 8.23) / 2, // ダブルスアレー幅
+  centerServiceX: 10.97 / 2,
+};
+const FULL_LENGTH = COURT.halfLength * 2; // 23.77
+
+// --- 実際のコート比率で描画エリアを算出 ---
+const PADDING = 20;
+const TOP_LABEL_SPACE = 14;
+const BOTTOM_LABEL_SPACE = 18;
+const DRAW_W = 280;
+const DRAW_H = DRAW_W * (FULL_LENGTH / COURT.width); // 実寸比率 (10.97:23.77)
+const VIEW_WIDTH = DRAW_W + PADDING * 2;
+const VIEW_HEIGHT = DRAW_H + PADDING * 2 + TOP_LABEL_SPACE + BOTTOM_LABEL_SPACE;
+const DRAW_X = PADDING;
+const DRAW_Y = PADDING + TOP_LABEL_SPACE;
+
+const STRAIGHT_SHIFT_AMOUNT = 1.0; // ストレート展開の時、両前衛を打点と逆サイドへずらす量
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+export default function SoftTennisPositioning() {
+  const [hitX, setHitX] = useState(COURT.width / 2);
+  const [hitY, setHitY] = useState(0);
+  const [maxAngle, setMaxAngle] = useState(13);
+  const [straightMode, setStraightMode] = useState(false); // false: 通常(クロス) / true: ストレート展開
+  const [frontNetDist, setFrontNetDist] = useState(4.0); // 自陣・相手陣の前衛に共通のネット距離（上下スライダーで調整）
+
+  // 前衛・後衛はドラッグで個別に上書きできる。打点(相手後衛)を動かす・スライダーを操作すると
+  // 上書きは解除され、条件に従った位置に戻ってから再度好きな位置へドラッグできる。
+  const [frontOverride, setFrontOverride] = useState(null);     // 自分前衛
+  const [oppFrontOverride, setOppFrontOverride] = useState(null); // 相手前衛
+  const [backOverride, setBackOverride] = useState(null);       // 自分後衛
+
+  const [dragTarget, setDragTarget] = useState(null); // 'ball' | 'front' | 'opp' | 'back' | null
+  const isDragging = dragTarget !== null;
+  const svgRef = useRef(null);
+
+  const toSvgX = useCallback((m) => DRAW_X + (m / COURT.width) * DRAW_W, []);
+  const toSvgY = useCallback((m) => DRAW_Y + (m / FULL_LENGTH) * DRAW_H, []);
+
+  // ポインタ位置 → コート座標(m)。クランプはせず生の値を返す
+  const rawPointerPos = useCallback((e) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: hitX, y: hitY };
+    const rect = svg.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const svgX = ((clientX - rect.left) / rect.width) * VIEW_WIDTH;
+    const svgY = ((clientY - rect.top) / rect.height) * VIEW_HEIGHT;
+    const mx = ((svgX - DRAW_X) / DRAW_W) * COURT.width;
+    const my = ((svgY - DRAW_Y) / DRAW_H) * FULL_LENGTH;
+    return { x: mx, y: my };
+  }, [hitX, hitY]);
+
+  // それぞれの駒ごとの可動範囲
+  const clampBall = useCallback(
+    (p) => ({ x: clamp(p.x, 0.3, COURT.width - 0.3), y: clamp(p.y, 0, COURT.halfLength - 0.3) }),
+    []
+  );
+  const clampFront = useCallback(
+    (p) => ({ x: clamp(p.x, 0.2, COURT.width - 0.2), y: clamp(p.y, COURT.halfLength + 0.15, FULL_LENGTH - 0.1) }),
+    []
+  );
+  const clampOppFront = useCallback(
+    (p) => ({ x: clamp(p.x, 0.2, COURT.width - 0.2), y: clamp(p.y, 0.1, COURT.halfLength - 0.15) }),
+    []
+  );
+  const clampBack = useCallback(
+    (p) => ({ x: clamp(p.x, 0.2, COURT.width - 0.2), y: clamp(p.y, COURT.halfLength + 0.15, FULL_LENGTH + 0.3) }),
+    []
+  );
+
+  const calcTriangle = useCallback(() => {
+    const baseY = FULL_LENGTH;
+    const baseMidX = COURT.width / 2;
+    const dx = baseMidX - hitX;
+    const dy = baseY - hitY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const maxRad = (maxAngle * Math.PI) / 180;
+    const halfBase = dist * Math.tan(maxRad);
+
+    let baseLeftX = baseMidX - halfBase;
+    let baseRightX = baseMidX + halfBase;
+
+    const points = [];
+    points.push({ x: hitX, y: hitY });
+
+    if (baseLeftX < 0) {
+      const t = (0 - hitX) / (baseLeftX - hitX);
+      const clipY = hitY + t * (baseY - hitY);
+      points.push({ x: 0, y: clipY });
+      points.push({ x: 0, y: baseY });
+      baseLeftX = 0;
+    } else {
+      points.push({ x: baseLeftX, y: baseY });
+    }
+
+    if (baseRightX > COURT.width) {
+      points.push({ x: COURT.width, y: baseY });
+      const t = (COURT.width - hitX) / (baseRightX - hitX);
+      const clipY = hitY + t * (baseY - hitY);
+      points.push({ x: COURT.width, y: clipY });
+      baseRightX = COURT.width;
+    } else {
+      points.push({ x: baseRightX, y: baseY });
+    }
+
+    return { points, baseMidX, baseLeftX, baseRightX };
+  }, [hitX, hitY, maxAngle]);
+
+  const triangle = calcTriangle();
+
+  const centerMarkX = COURT.width / 2;
+  const centerMarkY = FULL_LENGTH;
+
+  // 2点(from → to)を結ぶ直線上で、任意の高さ(y = atY)における x 座標を求める汎用関数
+  const posOnLine = useCallback((fromX, fromY, toX, toY, atY) => {
+    const dy = toY - fromY;
+    if (dy === 0) return toX;
+    const t = (atY - fromY) / dy;
+    return fromX + t * (toX - fromX);
+  }, []);
+
+  // --- 自分後衛（自陣ベースライン上）
+  // クロス展開: 打点と対角（センターを挟んで反対サイド）のベースライン位置
+  // ストレート展開: 打点の真下（同サイド）のベースライン位置
+  const backSign = straightMode ? 1 : -1;
+  const autoBackPlayerY = FULL_LENGTH;
+  const autoBackPlayerX = clamp(
+    centerMarkX + backSign * (hitX - centerMarkX),
+    0.2,
+    COURT.width - 0.2
+  );
+  const backPlayerX = backOverride ? backOverride.x : autoBackPlayerX;
+  const backPlayerY = backOverride ? backOverride.y : autoBackPlayerY;
+
+  // --- 自分前衛（ネットの自陣側）: 相手後衛（打点）と自陣センターマークを結ぶ線上の点 ---
+  const autoFrontPlayerY = COURT.halfLength + frontNetDist;
+  const autoFrontPlayerXBase = posOnLine(hitX, hitY, centerMarkX, centerMarkY, autoFrontPlayerY);
+
+  // --- 相手前衛（ネットの相手陣側）: 自分前衛と同じ考え方で、
+  //     「対戦している後衛（＝自分後衛の実際の位置）」と相手陣センターマーク（y=0）を
+  //     結ぶ線上の点として求める（この基準線とセンターマークは計算用で、画面には表示しない）
+  //     ＝ 自分後衛をドラッグして動かした場合も、クロス・ストレートどちらでも追従する
+  const autoOppFrontPlayerY = COURT.halfLength - frontNetDist;
+  const autoOppFrontPlayerXBase = posOnLine(backPlayerX, backPlayerY, centerMarkX, 0, autoOppFrontPlayerY);
+
+  // ストレート展開の時だけ、両前衛を「今までのシステムのポジション」から
+  // 打点と逆サイドへ一定量ずらす（打点が左なら右へ、右なら左へ）
+  const straightShift = straightMode
+    ? (hitX <= centerMarkX ? STRAIGHT_SHIFT_AMOUNT : -STRAIGHT_SHIFT_AMOUNT)
+    : 0;
+
+  const autoFrontPlayerX = clamp(autoFrontPlayerXBase + straightShift, 0.2, COURT.width - 0.2);
+  const autoOppFrontPlayerX = clamp(autoOppFrontPlayerXBase + straightShift, 0.2, COURT.width - 0.2);
+
+  const frontPlayerX = frontOverride ? frontOverride.x : autoFrontPlayerX;
+  const frontPlayerY = frontOverride ? frontOverride.y : autoFrontPlayerY;
+  const oppFrontPlayerX = oppFrontOverride ? oppFrontOverride.x : autoOppFrontPlayerX;
+  const oppFrontPlayerY = oppFrontOverride ? oppFrontOverride.y : autoOppFrontPlayerY;
+
+  const handleDragStart = useCallback((target) => (e) => {
+    e.preventDefault();
+    setDragTarget(target);
+  }, []);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!dragTarget) return;
+    e.preventDefault();
+    const raw = rawPointerPos(e);
+    if (dragTarget === "ball") {
+      const p = clampBall(raw);
+      setHitX(p.x);
+      setHitY(p.y);
+      setFrontOverride(null);
+      setOppFrontOverride(null);
+      setBackOverride(null);
+    } else if (dragTarget === "front") {
+      setFrontOverride(clampFront(raw));
+    } else if (dragTarget === "opp") {
+      setOppFrontOverride(clampOppFront(raw));
+    } else if (dragTarget === "back") {
+      setBackOverride(clampBack(raw));
+    }
+  }, [dragTarget, rawPointerPos, clampBall, clampFront, clampOppFront, clampBack]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragTarget(null);
+  }, []);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const preventScroll = (e) => {
+      if (isDragging) e.preventDefault();
+    };
+    svg.addEventListener("touchmove", preventScroll, { passive: false });
+    return () => svg.removeEventListener("touchmove", preventScroll);
+  }, [isDragging]);
+
+  // 右側の縦スライダー（前衛の前後位置）
+  const sliderRef = useRef(null);
+  const [sliderDragging, setSliderDragging] = useState(false);
+
+  const handleSliderInteraction = useCallback((e) => {
+    const container = sliderRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const ratio = clamp((clientY - rect.top) / rect.height, 0, 1);
+    const dist = 0.5 + ratio * 5.5;
+    setFrontNetDist(Math.round(dist * 10) / 10);
+    setFrontOverride(null);
+    setOppFrontOverride(null);
+    setBackOverride(null);
+  }, []);
+
+  useEffect(() => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const prevent = (e) => { e.preventDefault(); };
+    el.addEventListener("touchmove", prevent, { passive: false });
+    el.addEventListener("touchstart", prevent, { passive: false });
+    return () => {
+      el.removeEventListener("touchmove", prevent);
+      el.removeEventListener("touchstart", prevent);
+    };
+  }, []);
+
+  const courtLine = (x1, y1, x2, y2) => (
+    <line
+      x1={toSvgX(x1)} y1={toSvgY(y1)}
+      x2={toSvgX(x2)} y2={toSvgY(y2)}
+      stroke="rgba(255,255,255,0.85)"
+      strokeWidth={1.5}
+    />
+  );
+
+  const triPoints = triangle.points.map(p => `${toSvgX(p.x)},${toSvgY(p.y)}`).join(" ");
+
+  const netPct = ((DRAW_Y + (COURT.halfLength / FULL_LENGTH) * DRAW_H) / VIEW_HEIGHT) * 100;
+  const basePct = ((DRAW_Y + DRAW_H) / VIEW_HEIGHT) * 100;
+  const sliderHeightPct = basePct - netPct;
+  const thumbRatio = (frontNetDist - 0.5) / 5.5;
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#16223a",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      padding: "16px 8px",
+      fontFamily: "'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif",
+      color: "#eef3f9",
+      userSelect: "none",
+    }}>
+      <h1 style={{
+        fontSize: "18px", fontWeight: 700, letterSpacing: "0.03em",
+        margin: "0 0 12px 0", color: "#eef3f9", textAlign: "center",
+      }}>
+        ソフトテニス コートポジション
+      </h1>
+
+      {/* 凡例 */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: "6px 12px", justifyContent: "center",
+        marginBottom: "10px", maxWidth: "380px",
+      }}>
+        {[
+          { color: "#ff6b6b", label: "打点（相手後衛）" },
+          { color: "#f783ac", label: "相手前衛" },
+          { color: "#ffd166", label: "自分前衛" },
+          { color: "#4dd0e1", label: "自分後衛" },
+          { dash: true, color: "#74c0fc", label: "自分前衛の基準線" },
+          { fill: "rgba(255,107,107,0.3)", label: "打球可能範囲" },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            {item.dash ? (
+              <div style={{ width: "14px", height: "2px", borderTop: `2px dashed ${item.color}` }} />
+            ) : item.fill ? (
+              <div style={{ width: "14px", height: "10px", background: item.fill, borderRadius: "2px" }} />
+            ) : (
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: item.color, border: "1.5px solid #fff" }} />
+            )}
+            <span style={{ fontSize: "10px", color: "#93a9c2" }}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ストレート展開トグル */}
+      <button
+        onClick={() => setStraightMode((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: "6px",
+          margin: "0 0 12px 0", padding: "6px 16px", borderRadius: "999px",
+          border: straightMode ? "1.5px solid #a78bfa" : "1.5px solid #31445e",
+          background: straightMode ? "rgba(167,139,250,0.18)" : "#1f2f47",
+          color: straightMode ? "#c4b5fd" : "#93a9c2",
+          fontSize: "12px", fontWeight: 700, cursor: "pointer",
+        }}
+      >
+        <span style={{
+          width: "8px", height: "8px", borderRadius: "50%",
+          background: straightMode ? "#a78bfa" : "#556",
+        }} />
+        {straightMode ? "ストレート展開" : "通常（クロス）"}
+      </button>
+
+      {/* コート + 右サイド縦スライダー */}
+      <div style={{
+        display: "flex", alignItems: "stretch", gap: "8px",
+        width: "100%", maxWidth: "380px", justifyContent: "center",
+      }}>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        style={{
+          flex: "0 0 auto", width: "calc(100% - 50px)", maxWidth: "320px",
+          touchAction: "none", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.4))",
+        }}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
+      >
+        <defs>
+          <linearGradient id="courtGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3a7d5c" />
+            <stop offset="50%" stopColor="#2d6a4f" />
+            <stop offset="100%" stopColor="#245a42" />
+          </linearGradient>
+          <linearGradient id="triangleGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ff6b6b" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#ff6b6b" stopOpacity="0.35" />
+          </linearGradient>
+        </defs>
+        <rect x={DRAW_X} y={DRAW_Y} width={DRAW_W} height={DRAW_H} rx={4} fill="url(#courtGrad)" />
+
+        {/* 三角形 */}
+        <polygon points={triPoints} fill="url(#triangleGrad)" stroke="#ff6b6b" strokeWidth={1.5} strokeOpacity={0.6} />
+
+        {/* コートライン */}
+        {courtLine(0, 0, COURT.width, 0)}
+        {courtLine(0, FULL_LENGTH, COURT.width, FULL_LENGTH)}
+        <line x1={toSvgX(-0.3)} y1={toSvgY(COURT.halfLength)} x2={toSvgX(COURT.width + 0.3)} y2={toSvgY(COURT.halfLength)} stroke="#fff" strokeWidth={3} strokeOpacity={0.9} />
+        <text x={toSvgX(COURT.width + 0.3) + 4} y={toSvgY(COURT.halfLength) + 4} fill="#c9d6e3" fontSize="10">ネット</text>
+        {courtLine(COURT.sideMargin, COURT.halfLength - COURT.serviceLine, COURT.width - COURT.sideMargin, COURT.halfLength - COURT.serviceLine)}
+        {courtLine(COURT.sideMargin, COURT.halfLength + COURT.serviceLine, COURT.width - COURT.sideMargin, COURT.halfLength + COURT.serviceLine)}
+        {courtLine(0, 0, 0, FULL_LENGTH)}
+        {courtLine(COURT.width, 0, COURT.width, FULL_LENGTH)}
+        {courtLine(COURT.sideMargin, 0, COURT.sideMargin, FULL_LENGTH)}
+        {courtLine(COURT.width - COURT.sideMargin, 0, COURT.width - COURT.sideMargin, FULL_LENGTH)}
+        {courtLine(COURT.centerServiceX, COURT.halfLength - COURT.serviceLine, COURT.centerServiceX, COURT.halfLength)}
+        {courtLine(COURT.centerServiceX, COURT.halfLength, COURT.centerServiceX, COURT.halfLength + COURT.serviceLine)}
+
+        {/* 前衛ライン（自陣・目安） */}
+        <line x1={toSvgX(0)} y1={toSvgY(autoFrontPlayerY)} x2={toSvgX(COURT.width)} y2={toSvgY(autoFrontPlayerY)} stroke="#ffd166" strokeWidth={1} strokeDasharray="4,4" strokeOpacity={0.4} />
+        {/* 前衛ライン（相手陣・目安） */}
+        <line x1={toSvgX(0)} y1={toSvgY(autoOppFrontPlayerY)} x2={toSvgX(COURT.width)} y2={toSvgY(autoOppFrontPlayerY)} stroke="#f783ac" strokeWidth={1} strokeDasharray="4,4" strokeOpacity={0.4} />
+
+        {/* 基準線（相手後衛→自陣センターマーク）＝自分前衛の根拠 */}
+        <line x1={toSvgX(hitX)} y1={toSvgY(hitY)} x2={toSvgX(centerMarkX)} y2={toSvgY(centerMarkY)} stroke="#74c0fc" strokeWidth={2} strokeDasharray="8,5" strokeOpacity={0.8} />
+        {/* 自分後衛→相手陣センターマークの基準線は、相手前衛の算出にのみ使用し非表示 */}
+
+        {/* センターマーク（自陣） */}
+        <circle cx={toSvgX(centerMarkX)} cy={toSvgY(centerMarkY)} r={4} fill="#74c0fc" stroke="#fff" strokeWidth={1} />
+
+        {/* 相手前衛（ドラッグ可能） */}
+        <g
+          style={{ cursor: dragTarget === "opp" ? "grabbing" : "grab" }}
+          onMouseDown={handleDragStart("opp")}
+          onTouchStart={handleDragStart("opp")}
+        >
+          <circle cx={toSvgX(oppFrontPlayerX)} cy={toSvgY(oppFrontPlayerY)} r={20} fill="transparent" />
+          <circle cx={toSvgX(oppFrontPlayerX)} cy={toSvgY(oppFrontPlayerY)} r={12} fill="#f783ac" fillOpacity={0.22} stroke="#f783ac" strokeWidth={2} />
+          <circle cx={toSvgX(oppFrontPlayerX)} cy={toSvgY(oppFrontPlayerY)} r={6} fill="#f783ac" stroke="#fff" strokeWidth={1.5} />
+          <text x={toSvgX(oppFrontPlayerX) + 16} y={toSvgY(oppFrontPlayerY) + 4} fill="#f783ac" fontSize="11" fontWeight="bold">相手前衛</text>
+        </g>
+
+        {/* 自分前衛（ドラッグ可能） */}
+        <g
+          style={{ cursor: dragTarget === "front" ? "grabbing" : "grab" }}
+          onMouseDown={handleDragStart("front")}
+          onTouchStart={handleDragStart("front")}
+        >
+          <circle cx={toSvgX(frontPlayerX)} cy={toSvgY(frontPlayerY)} r={22} fill="transparent" />
+          <circle cx={toSvgX(frontPlayerX)} cy={toSvgY(frontPlayerY)} r={14} fill="#ffd166" fillOpacity={0.25} stroke="#ffd166" strokeWidth={2} />
+          <circle cx={toSvgX(frontPlayerX)} cy={toSvgY(frontPlayerY)} r={7} fill="#ffd166" stroke="#fff" strokeWidth={1.5} />
+          <text x={toSvgX(frontPlayerX) + 18} y={toSvgY(frontPlayerY) + 4} fill="#ffd166" fontSize="11" fontWeight="bold">自分前衛</text>
+        </g>
+
+        {/* 自分後衛（ドラッグ可能） */}
+        <g
+          style={{ cursor: dragTarget === "back" ? "grabbing" : "grab" }}
+          onMouseDown={handleDragStart("back")}
+          onTouchStart={handleDragStart("back")}
+        >
+          <circle cx={toSvgX(backPlayerX)} cy={toSvgY(backPlayerY)} r={20} fill="transparent" />
+          <circle cx={toSvgX(backPlayerX)} cy={toSvgY(backPlayerY)} r={13} fill="#4dd0e1" fillOpacity={0.22} stroke="#4dd0e1" strokeWidth={2} />
+          <circle cx={toSvgX(backPlayerX)} cy={toSvgY(backPlayerY)} r={6.5} fill="#4dd0e1" stroke="#fff" strokeWidth={1.5} />
+          <text x={toSvgX(backPlayerX) + 17} y={toSvgY(backPlayerY) + 4} fill="#4dd0e1" fontSize="11" fontWeight="bold">自分後衛</text>
+        </g>
+
+        {/* ラベル */}
+        <text x={toSvgX(COURT.centerServiceX)} y={DRAW_Y - 6} textAnchor="middle" fill="#c9d6e3" fontSize="11">相手コート（奥）</text>
+        <text x={toSvgX(COURT.centerServiceX)} y={DRAW_Y + DRAW_H + 16} textAnchor="middle" fill="#c9d6e3" fontSize="11">自分コート（手前）</text>
+
+        {/* 打点（ドラッグ可能） */}
+        <g style={{ cursor: dragTarget === "ball" ? "grabbing" : "grab" }} onMouseDown={handleDragStart("ball")} onTouchStart={handleDragStart("ball")}>
+          <circle cx={toSvgX(hitX)} cy={toSvgY(hitY)} r={20} fill="transparent" />
+          <circle cx={toSvgX(hitX)} cy={toSvgY(hitY)} r={10} fill="#ff6b6b" stroke="#fff" strokeWidth={2}
+            style={{ filter: dragTarget === "ball" ? "drop-shadow(0 0 8px #ff6b6b)" : "drop-shadow(0 0 4px rgba(255,107,107,0.5))" }}
+          />
+          <text x={toSvgX(hitX)} y={toSvgY(hitY) + 24} textAnchor="middle" fill="#ff8787" fontSize="10" fontWeight="bold">打点をドラッグ</text>
+        </g>
+      </svg>
+
+      {/* 右サイド: 前衛の前後位置スライダー */}
+      <div style={{ position: "relative", width: "40px", flexShrink: 0, alignSelf: "stretch" }}>
+        <div style={{ position: "absolute", top: `${netPct - 1}%`, left: "50%", transform: "translate(-50%, -100%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+          <div style={{ background: "rgba(255,209,102,0.15)", borderRadius: "6px", padding: "2px 5px", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "9px", color: "#ffd166", fontWeight: 700 }}>±{frontNetDist.toFixed(1)}m</span>
+          </div>
+          <span style={{ fontSize: "10px", color: "#ffd166", fontWeight: 700 }}>▲ 前</span>
+        </div>
+        <div style={{ position: "absolute", top: `${netPct}%`, left: "50%", width: "4px", height: `${sliderHeightPct}%`, transform: "translateX(-50%)", background: "rgba(255,209,102,0.2)", borderRadius: "2px" }} />
+        <div ref={sliderRef} style={{ position: "absolute", top: `${netPct}%`, left: 0, width: "100%", height: `${sliderHeightPct}%`, cursor: "pointer", touchAction: "none" }}
+          onMouseDown={(e) => { setSliderDragging(true); handleSliderInteraction(e); }}
+          onMouseMove={(e) => { if (sliderDragging) handleSliderInteraction(e); }}
+          onMouseUp={() => setSliderDragging(false)}
+          onMouseLeave={() => setSliderDragging(false)}
+          onTouchStart={(e) => { setSliderDragging(true); handleSliderInteraction(e); }}
+          onTouchMove={(e) => { if (sliderDragging) handleSliderInteraction(e); }}
+          onTouchEnd={() => setSliderDragging(false)}
+        >
+          <div style={{
+            position: "absolute", top: `${thumbRatio * 100}%`, left: "50%",
+            transform: "translate(-50%, -50%)", width: "24px", height: "24px",
+            borderRadius: "50%", background: "#ffd166", border: "2px solid #fff",
+            boxShadow: sliderDragging ? "0 0 12px rgba(255,209,102,0.7)" : "0 0 6px rgba(255,209,102,0.3)",
+            transition: sliderDragging ? "none" : "top 0.1s ease",
+          }} />
+        </div>
+        <div style={{ position: "absolute", top: `${basePct + 1}%`, left: 0, width: "100%", textAlign: "center", fontSize: "10px", color: "#ffd166", fontWeight: 700 }}>▼ 後</div>
+      </div>
+      </div>
+
+      {/* 情報パネル */}
+      <div style={{ width: "100%", maxWidth: "380px", marginTop: "10px" }}>
+        <div style={{ background: "#1f2f47", borderRadius: "8px", padding: "8px 12px", border: "1px solid #31445e" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <span style={{ fontSize: "11px", color: "#c9d6e3", fontWeight: 600 }}>打球範囲の広さ</span>
+            <span style={{ fontSize: "14px", fontWeight: 800, color: "#ff6b6b", background: "rgba(255,107,107,0.12)", padding: "1px 8px", borderRadius: "6px" }}>{maxAngle}°</span>
+          </div>
+          <input type="range" min={0} max={55} value={maxAngle} onChange={(e) => setMaxAngle(Number(e.target.value))}
+            style={{ width: "100%", accentColor: "#ff6b6b", height: "5px" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("simulatorRoot"));
+root.render(<SoftTennisPositioning />);
+</script>
+
+</body>
+</html>
