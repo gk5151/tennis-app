@@ -7,6 +7,9 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #16223a; }
 </style>
@@ -17,9 +20,25 @@
 const { useState, useRef, useCallback, useEffect } = React;
 
 // ==================================================================
-// パスワード（好きな文字列に変更してからデプロイしてください）
+// Firebase設定（後であなたのプロジェクトIDに変更してください）
 // ==================================================================
-const SITE_PASSWORD = "gk5151";
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Firebase初期化
+let firebaseInitialized = false;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebaseInitialized = true;
+} catch (e) {
+  console.error("Firebase初期化エラー:", e);
+}
 
 // ソフトテニスコート寸法 (メートル) ― テニスと同一サイズ
 const COURT = {
@@ -492,66 +511,147 @@ function SoftTennisPositioning() {
 }
 
 // ==================================================================
-// 簡易パスワードゲート（このブラウザのタブを閉じるまでログイン状態を保持）
+// Firebase認証ゲート
 // ==================================================================
-function PasswordGate({ children }) {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem("stp_authed") === "1");
-  const [input, setInput] = useState("");
-  const [error, setError] = useState(false);
+function FirebaseAuthGate({ children }) {
+  const [authed, setAuthed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  if (authed) return children;
+  useEffect(() => {
+    if (!firebaseInitialized) {
+      setError("Firebase初期化に失敗しました。設定を確認してください。");
+      setLoading(false);
+      return;
+    }
 
-  const handleSubmit = (e) => {
+    const auth = firebase.auth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setAuthed(true);
+      } else {
+        setAuthed(false);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    if (input === SITE_PASSWORD) {
-      sessionStorage.setItem("stp_authed", "1");
-      setAuthed(true);
-    } else {
-      setError(true);
+    setError("");
+    try {
+      const auth = firebase.auth();
+      if (isSignUp) {
+        await auth.createUserWithEmailAndPassword(email, password);
+      } else {
+        await auth.signInWithEmailAndPassword(email, password);
+      }
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  return (
-    <div style={{
-      minHeight: "100vh", background: "#16223a", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: "16px",
-      fontFamily: "'Helvetica Neue','Hiragino Sans','Noto Sans JP',sans-serif",
-    }}>
-      <form onSubmit={handleSubmit} style={{
-        background: "#1f2f47", border: "1px solid #31445e", borderRadius: "12px",
-        padding: "28px 24px", width: "100%", maxWidth: "320px",
+  const handleSignOut = () => {
+    firebase.auth().signOut();
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: "#16223a", display: "flex",
+        alignItems: "center", justifyContent: "center",
+        fontFamily: "'Helvetica Neue','Hiragino Sans','Noto Sans JP',sans-serif",
+        color: "#eef3f9"
       }}>
-        <h1 style={{ color: "#eef3f9", fontSize: "16px", fontWeight: 700, margin: "0 0 16px 0", textAlign: "center" }}>
-          パスワードを入力
-        </h1>
-        <input
-          type="password"
-          value={input}
-          onChange={(e) => { setInput(e.target.value); setError(false); }}
-          autoFocus
-          style={{
-            width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px",
-            border: error ? "1.5px solid #ff6b6b" : "1px solid #31445e",
-            background: "#16223a", color: "#eef3f9", fontSize: "14px", marginBottom: "10px",
-          }}
-        />
-        {error && <p style={{ color: "#ff6b6b", fontSize: "12px", margin: "0 0 10px 0" }}>パスワードが違います</p>}
-        <button type="submit" style={{
-          width: "100%", padding: "10px", borderRadius: "8px", border: "none",
-          background: "#ffd166", color: "#16223a", fontWeight: 700, fontSize: "14px", cursor: "pointer",
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!authed) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: "#16223a", display: "flex",
+        alignItems: "center", justifyContent: "center", padding: "16px",
+        fontFamily: "'Helvetica Neue','Hiragino Sans','Noto Sans JP',sans-serif",
+      }}>
+        <form onSubmit={handleSignIn} style={{
+          background: "#1f2f47", border: "1px solid #31445e", borderRadius: "12px",
+          padding: "28px 24px", width: "100%", maxWidth: "320px",
         }}>
-          入室
+          <h1 style={{ color: "#eef3f9", fontSize: "16px", fontWeight: 700, margin: "0 0 16px 0", textAlign: "center" }}>
+            {isSignUp ? "アカウント作成" : "ログイン"}
+          </h1>
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            style={{
+              width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px",
+              border: "1px solid #31445e", background: "#16223a", color: "#eef3f9", 
+              fontSize: "14px", marginBottom: "10px",
+            }}
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(""); }}
+            style={{
+              width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px",
+              border: "1px solid #31445e", background: "#16223a", color: "#eef3f9", 
+              fontSize: "14px", marginBottom: "10px",
+            }}
+          />
+          {error && <p style={{ color: "#ff6b6b", fontSize: "12px", margin: "0 0 10px 0" }}>{error}</p>}
+          <button type="submit" style={{
+            width: "100%", padding: "10px", borderRadius: "8px", border: "none",
+            background: "#ffd166", color: "#16223a", fontWeight: 700, fontSize: "14px", cursor: "pointer",
+            marginBottom: "10px"
+          }}>
+            {isSignUp ? "作成" : "ログイン"}
+          </button>
+          <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(""); }} style={{
+            width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ffd166",
+            background: "transparent", color: "#ffd166", fontWeight: 700, fontSize: "14px", cursor: "pointer",
+          }}>
+            {isSignUp ? "ログインに戻る" : "アカウント作成"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{
+        position: "fixed", top: "10px", right: "10px", zIndex: 9999,
+        background: "#1f2f47", border: "1px solid #31445e", borderRadius: "8px",
+        padding: "8px 12px",
+      }}>
+        <button onClick={handleSignOut} style={{
+          background: "#ff6b6b", color: "#fff", border: "none", padding: "6px 12px",
+          borderRadius: "6px", fontSize: "12px", cursor: "pointer", fontWeight: 700
+        }}>
+          ログアウト
         </button>
-      </form>
+      </div>
+      {children}
     </div>
   );
 }
 
 function App() {
   return (
-    <PasswordGate>
+    <FirebaseAuthGate>
       <SoftTennisPositioning />
-    </PasswordGate>
+    </FirebaseAuthGate>
   );
 }
 
