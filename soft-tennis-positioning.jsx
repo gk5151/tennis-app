@@ -26,7 +26,7 @@ const STRAIGHT_SHIFT_AMOUNT = 1.0; // ストレート展開の時、両前衛を
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-export default function SoftTennisPositioning() {
+function SoftTennisPositioning() {
   const [hitX, setHitX] = useState(COURT.width / 2);
   const [hitY, setHitY] = useState(0);
   const [maxAngle, setMaxAngle] = useState(13);
