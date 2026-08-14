@@ -628,9 +628,16 @@ function SoftTennisPositioning({ onNavigate }) {
 // ハッシュ化パスワード認証ゲート
 // ==================================================================
 function PasswordGate({ children }) {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem("stp_authed") === "1");
+  const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // ページ読み込み時にsessionStorageから認証状態を確認
+    if (sessionStorage.getItem("stp_authed") === "1") {
+      setAuthed(true);
+    }
+  }, []);
 
   if (authed) return children;
 
@@ -641,6 +648,7 @@ function PasswordGate({ children }) {
       setAuthed(true);
     } else {
       setError(true);
+      setInput("");
     }
   };
 
@@ -667,6 +675,7 @@ function PasswordGate({ children }) {
             border: error ? "1.5px solid #ff6b6b" : "1px solid #31445e",
             background: "#16223a", color: "#eef3f9", fontSize: "14px", marginBottom: "10px",
           }}
+          placeholder="パスワード"
         />
         {error && <p style={{ color: "#ff6b6b", fontSize: "12px", margin: "0 0 10px 0" }}>パスワードが違います</p>}
         <button type="submit" style={{
