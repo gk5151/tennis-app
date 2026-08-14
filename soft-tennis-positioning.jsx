@@ -30,7 +30,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 function SoftTennisPositioning() {
   const [hitX, setHitX] = useState(COURT.width / 2);
-  const [hitY, setHitY] = useState(0);
+  const [hitY, setHitY] = useState(3.0);
   const [maxAngle, setMaxAngle] = useState(13);
   const [straightMode, setStraightMode] = useState(false); // false: 通常(クロス) / true: ストレート展開
   const [frontNetDist, setFrontNetDist] = useState(4.0); // 自陣・相手陣の前衛に共通のネット距離（上下スライダーで調整）
@@ -123,7 +123,6 @@ function SoftTennisPositioning() {
   const centerMarkX = COURT.width / 2;
   const centerMarkY = FULL_LENGTH;
 
-  // 2点(from → to)を結ぶ直線上で、任意の高さ(y = atY)における x 座標を求める汎用関数
   const posOnLine = useCallback((fromX, fromY, toX, toY, atY) => {
     const dy = toY - fromY;
     if (dy === 0) return toX;
@@ -132,8 +131,6 @@ function SoftTennisPositioning() {
   }, []);
 
   // --- 自分後衛（自陣ベースライン上）
-  // クロス展開: 打点と対角（センターを挟んで反対サイド）のベースライン位置
-  // ストレート展開: 打点の真下（同サイド）のベースライン位置
   const backSign = straightMode ? 1 : -1;
   const autoBackPlayerY = FULL_LENGTH;
   const autoBackPlayerX = clamp(
@@ -148,15 +145,10 @@ function SoftTennisPositioning() {
   const autoFrontPlayerY = COURT.halfLength + frontNetDist;
   const autoFrontPlayerXBase = posOnLine(hitX, hitY, centerMarkX, centerMarkY, autoFrontPlayerY);
 
-  // --- 相手前衛（ネットの相手陣側）: 自分前衛と同じ考え方で、
-  //     「対戦している後衛（＝自分後衛の実際の位置）」と相手陣センターマーク（y=0）を
-  //     結ぶ線上の点として求める（この基準線とセンターマークは計算用で、画面には表示しない）
-  //     ＝ 自分後衛をドラッグして動かした場合も、クロス・ストレートどちらでも追従する
+  // --- 相手前衛（ネットの相手陣側） ---
   const autoOppFrontPlayerY = COURT.halfLength - frontNetDist;
   const autoOppFrontPlayerXBase = posOnLine(backPlayerX, backPlayerY, centerMarkX, 0, autoOppFrontPlayerY);
 
-  // ストレート展開の時だけ、両前衛を「今までのシステムのポジション」から
-  // 打点と逆サイドへ一定量ずらす（打点が左なら右へ、右なら左へ）
   const straightShift = straightMode
     ? (hitX <= centerMarkX ? STRAIGHT_SHIFT_AMOUNT : -STRAIGHT_SHIFT_AMOUNT)
     : 0;
@@ -208,7 +200,25 @@ function SoftTennisPositioning() {
     return () => svg.removeEventListener("touchmove", preventScroll);
   }, [isDragging]);
 
-  // 右側の縦スライダー（前衛の前後位置）
+  // ドラッグ中はドキュメント全体でポインタ移動とアップを拾う
+  useEffect(() => {
+    const onMove = (e) => handlePointerMove(e);
+    const onUp = () => handlePointerUp();
+    if (dragTarget) {
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchend', onUp);
+      return () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchend', onUp);
+      };
+    }
+  }, [dragTarget, handlePointerMove, handlePointerUp]);
+
+  // スライダー処理
   const sliderRef = useRef(null);
   const [sliderDragging, setSliderDragging] = useState(false);
 
@@ -237,6 +247,25 @@ function SoftTennisPositioning() {
     };
   }, []);
 
+  useEffect(() => {
+    const onMove = (e) => {
+      if (sliderDragging) handleSliderInteraction(e);
+    };
+    const onUp = () => setSliderDragging(false);
+    if (sliderDragging) {
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchend', onUp);
+      return () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchend', onUp);
+      };
+    }
+  }, [sliderDragging, handleSliderInteraction]);
+
   const courtLine = (x1, y1, x2, y2) => (
     React.createElement('line', {
       x1: toSvgX(x1), y1: toSvgY(y1),
@@ -254,12 +283,72 @@ function SoftTennisPositioning() {
   const thumbRatio = (frontNetDist - 0.5) / 5.5;
 
   return (
-    /* JSX を Babel がトランスパイルします */
-    React.createElement('div', { style: { minHeight: "100vh", background: "#16223a", display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 8px", fontFamily: "'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif", color: "#eef3f9", userSelect: "none" } },
-      React.createElement('h1', { style: { fontSize: "18px", fontWeight: 700, letterSpacing: "0.03em", margin: "0 0 12px 0", color: "#eef3f9", textAlign: "center" } }, 'ソフトテニス コートポジション'),
-      /* （元の UI の SVG 部分などを含めるため、必要に応じて元の JSX をこちらに戻してください。長いので主要部分のみ変換済みです。） */
-      React.createElement('div', { style: { color: "#93a9c2", marginTop: 8 } }, 'シミュレータがここに表示されます（外部ファイル版）。')
-    )
+    <div style={{ minHeight: "100%", display: 'flex', gap: 16, alignItems: 'flex-start', color: '#eef3f9' }}>
+      <div style={{ width: VIEW_WIDTH, background: '#1f2f47', border: '1px solid #31445e', borderRadius: 8, padding: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+          <h2 style={{ margin: 0, fontSize: 16 }}>前衛ポジショニング</h2>
+          <div style={{ fontSize: 12, color: '#93a9c2' }}>打点: {hitX.toFixed(2)}m, {hitY.toFixed(2)}m</div>
+        </div>
+
+        <svg ref={svgRef} width={VIEW_WIDTH} height={VIEW_HEIGHT} style={{ touchAction: 'none', display: 'block', background: '#16223a', borderRadius: 6 }}>
+          <rect x={DRAW_X} y={DRAW_Y} width={DRAW_W} height={DRAW_H} fill="#0f1b2a" rx={8} />
+
+          {/* コートライン */}
+          {courtLine(0, 0, COURT.width, 0)}
+          {courtLine(0, FULL_LENGTH, COURT.width, FULL_LENGTH)}
+          {/* ネット */}
+          {courtLine(0, COURT.halfLength, COURT.width, COURT.halfLength)}
+
+          {/* サービスライン */}
+          {courtLine(0, COURT.serviceLine, COURT.width, COURT.serviceLine)}
+          {courtLine(0, FULL_LENGTH - COURT.serviceLine, COURT.width, FULL_LENGTH - COURT.serviceLine)}
+
+          {/* センターマーク */}
+          <line x1={toSvgX(centerMarkX - 0.1)} y1={toSvgY(FULL_LENGTH)} x2={toSvgX(centerMarkX + 0.1)} y2={toSvgY(FULL_LENGTH)} stroke="#fff" strokeWidth={1.2} />
+
+          {/* 到達エリアの三角形 */}
+          <polygon points={triPoints} fill="rgba(255,209,102,0.10)" stroke="rgba(255,209,102,0.28)" strokeWidth={1.2} />
+
+          {/* ボール（打点） */}
+          <circle cx={toSvgX(hitX)} cy={toSvgY(hitY)} r={8} fill="#ffd166" stroke="#b87b00" strokeWidth={1} onMouseDown={handleDragStart('ball')} onTouchStart={handleDragStart('ball')} style={{ cursor: 'grab' }} />
+
+          {/* 自分後衛 */}
+          <circle cx={toSvgX(backPlayerX)} cy={toSvgY(backPlayerY)} r={7} fill="#93a9c2" stroke="#3b4f61" strokeWidth={1} onMouseDown={handleDragStart('back')} onTouchStart={handleDragStart('back')} style={{ cursor: 'grab' }} />
+
+          {/* 自分前衛 */}
+          <circle cx={toSvgX(frontPlayerX)} cy={toSvgY(frontPlayerY)} r={7} fill="#eef3f9" stroke="#31445e" strokeWidth={1} onMouseDown={handleDragStart('front')} onTouchStart={handleDragStart('front')} style={{ cursor: 'grab' }} />
+
+          {/* 相手前衛 */}
+          <circle cx={toSvgX(oppFrontPlayerX)} cy={toSvgY(oppFrontPlayerY)} r={7} fill="#ff8787" stroke="#7a3030" strokeWidth={1} onMouseDown={handleDragStart('opp')} onTouchStart={handleDragStart('opp')} style={{ cursor: 'grab' }} />
+
+        </svg>
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+          <label style={{ fontSize: 12, color: '#93a9c2' }}>角度: </label>
+          <input type="range" min={5} max={30} value={maxAngle} onChange={(e) => setMaxAngle(Number(e.target.value))} />
+          <div style={{ fontSize: 12, width: 36, textAlign: 'right' }}>{maxAngle}°</div>
+
+          <label style={{ marginLeft: 12, fontSize: 12 }}>
+            <input type="checkbox" checked={straightMode} onChange={(e) => setStraightMode(e.target.checked)} /> ストレート
+          </label>
+        </div>
+      </div>
+
+      <div style={{ width: 120, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ background: '#1f2f47', border: '1px solid #31445e', borderRadius: 8, padding: 8 }}>
+          <div style={{ fontSize: 12, color: '#93a9c2', marginBottom: 8 }}>前衛のネット距離</div>
+          <div ref={sliderRef} onMouseDown={(e) => { setSliderDragging(true); handleSliderInteraction(e); }} onTouchStart={(e) => { setSliderDragging(true); handleSliderInteraction(e); }} style={{ height: VIEW_HEIGHT * ((sliderHeightPct) / 100), background: '#0f1b2a', borderRadius: 6, position: 'relative', touchAction: 'none' }}>
+            <div style={{ position: 'absolute', left: 8, right: 8, top: 4, bottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#93a9c2', fontSize: 12 }}>{frontNetDist.toFixed(1)} m</div>
+            <div style={{ position: 'absolute', left: 6, right: 6, top: 4 + (VIEW_HEIGHT * ((sliderHeightPct) / 100) - 8) * thumbRatio, height: 14, background: '#ffd166', borderRadius: 7 }} />
+          </div>
+        </div>
+
+        <div style={{ background: '#1f2f47', border: '1px solid #31445e', borderRadius: 8, padding: 8, fontSize: 12 }}>
+          <div style={{ color: '#93a9c2', marginBottom: 6 }}>説明</div>
+          <div style={{ color: '#c9d6e3' }}>ボール・選手をドラッグして動かせます。角度やストレート切替で配置が変わります。</div>
+        </div>
+      </div>
+    </div>
   );
 }
 
