@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+const { useState, useRef, useCallback, useEffect } = React;
 
 // ソフトテニスコート寸法 (メートル) ― テニスと同一サイズ
 const COURT = {
