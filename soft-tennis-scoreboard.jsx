@@ -1,5 +1,3 @@
-import { useState, useCallback } from "react";
-
 const FORMATS = {
   5: { majority: 3 },
   7: { majority: 4 },
@@ -10,7 +8,7 @@ const TEAM_COLORS = { A: "#1c64f2", B: "#2f9e44" };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-export default function SoftTennisScoreboard() {
+function SoftTennisScoreboard() {
   const [format, setFormat] = useState(5);
   const [gamesA, setGamesA] = useState(0);
   const [gamesB, setGamesB] = useState(0);
@@ -405,4 +403,5 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
       </button>
     </div>
   );
+  window.SoftTennisScoreboard = SoftTennisScoreboard;
 }
