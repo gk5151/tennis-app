@@ -1,3 +1,5 @@
+const { useState, useRef, useCallback, useEffect } = React;
+
 const FORMATS = {
   5: { majority: 3 },
   7: { majority: 4 },
