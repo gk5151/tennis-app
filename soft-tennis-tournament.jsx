@@ -517,3 +517,5 @@ const tbdCardStyle = {
   color: "#5a6b80",
   textAlign: "center",
 };
+
+ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisPositioning />);
