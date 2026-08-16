@@ -325,4 +325,4 @@ const secondaryBtn = {
   cursor: "pointer",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisPositioning />);
+ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisTimer />);
