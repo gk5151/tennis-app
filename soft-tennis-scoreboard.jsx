@@ -401,4 +401,11 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
     </div>
   );
 }
-ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisScoreboard />);
+
+window.SoftTennisScoreboard = SoftTennisScoreboard;
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <SoftTennisScoreboard />
+);
