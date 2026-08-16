@@ -320,10 +320,10 @@ const btnStyle = {
   cursor: "pointer",
 };
 
-window.SoftTennisScoreboard = SoftTennisScoreboard;
+window.TacticsBoard = TacticsBoard;
 
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
-  <SoftTennisScoreboard />
+  <TacticsBoard />
 );
