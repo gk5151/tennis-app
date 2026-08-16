@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+const { useState, useRef, useCallback, useEffect } = React;
 
 const PRESETS = [
   { label: "1分", sec: 60 },
