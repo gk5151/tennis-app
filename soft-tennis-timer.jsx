@@ -325,12 +325,12 @@ const secondaryBtn = {
   cursor: "pointer",
 };
 
-window.SoftTennisScoreboard = SoftTennisScoreboard;
+window.SoftTennisTimer = SoftTennisTimer;
 
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
-  <SoftTennisScoreboard />
+  <SoftTennisTimer />
 );
 
 
