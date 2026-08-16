@@ -320,6 +320,8 @@ const btnStyle = {
   cursor: "pointer",
 };
 
+window.SoftTennisScoreboard = SoftTennisScoreboard;
+
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
