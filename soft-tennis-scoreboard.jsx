@@ -402,4 +402,5 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
   );
 }
 
+window.SoftTennisScoreboard = SoftTennisScoreboard;
 ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisScoreboard />);
