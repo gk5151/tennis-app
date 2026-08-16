@@ -10,7 +10,7 @@ const TEAM_COLORS = { A: "#1c64f2", B: "#2f9e44" };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-function SoftTennisScoreboard() {
+export default function SoftTennisScoreboard() {
   const [format, setFormat] = useState(5);
   const [gamesA, setGamesA] = useState(0);
   const [gamesB, setGamesB] = useState(0);
@@ -35,12 +35,6 @@ function SoftTennisScoreboard() {
     setAdvantage(null);
     setWinner(null);
   }, []);
-
-  const resetGamePoints = () => {
-    setPA(0);
-    setPB(0);
-    setAdvantage(null);
-  };
 
   const winGame = useCallback((side, currentGamesA, currentGamesB) => {
     const newGamesA = side === "A" ? currentGamesA + 1 : currentGamesA;
@@ -127,13 +121,13 @@ function SoftTennisScoreboard() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0b0b10",
+        background: "#16223a",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         padding: "16px 8px",
         fontFamily: "'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif",
-        color: "#eef0f4",
+        color: "#eef3f9",
         userSelect: "none",
       }}
     >
@@ -143,7 +137,7 @@ function SoftTennisScoreboard() {
           fontWeight: 700,
           letterSpacing: "0.03em",
           margin: "0 0 12px 0",
-          color: "#eef0f4",
+          color: "#eef3f9",
           textAlign: "center",
         }}
       >
@@ -151,18 +145,18 @@ function SoftTennisScoreboard() {
       </h1>
 
       {/* マッチ形式選択 */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
         {[5, 7, 9].map((f) => (
           <button
             key={f}
             onClick={() => resetMatch(f)}
             style={{
-              padding: "6px 16px",
+              padding: "6px 12px",
               borderRadius: "999px",
-              border: format === f ? "1.5px solid #a78bfa" : "1.5px solid #2a2a35",
-              background: format === f ? "rgba(167,139,250,0.18)" : "#16161d",
-              color: format === f ? "#c4b5fd" : "#8a8a99",
-              fontSize: "12px",
+              border: format === f ? "1.5px solid #a78bfa" : "1.5px solid #31445e",
+              background: format === f ? "rgba(167,139,250,0.18)" : "#1f2f47",
+              color: format === f ? "#c4b5fd" : "#93a9c2",
+              fontSize: "11px",
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -194,22 +188,23 @@ function SoftTennisScoreboard() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "600px",
-          background: "#000000",
+          maxWidth: "360px",
+          background: "#1f2f47",
           borderRadius: "16px",
-          border: "1px solid #232330",
-          padding: "20px 16px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+          border: "1px solid #31445e",
+          padding: "18px 14px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", gap: "18px", alignItems: "flex-start", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", justifyContent: "center" }}>
           {["A", "B"].map((side, i) => (
-            <div key={side} style={{ display: "flex", alignItems: "flex-start", gap: "18px" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#8a8a99" }}>
+            <div key={side} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#93a9c2" }}>
                   チーム{side === "A" ? "1" : "2"}
                 </div>
-                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
                   {side === "A" ? (
                     <>
                       <ScoreCard
@@ -217,9 +212,9 @@ function SoftTennisScoreboard() {
                         colorMain={TEAM_COLORS[side]}
                         onInc={() => incPoint(side)}
                         onDec={() => decPoint(side)}
-                        fontSize="52px"
-                        cardWidth="128px"
-                        cardHeight="100px"
+                        fontSize="32px"
+                        cardWidth="82px"
+                        cardHeight="82px"
                         disabled={!!winner}
                       />
                       <ScoreCard
@@ -227,9 +222,9 @@ function SoftTennisScoreboard() {
                         colorMain={TEAM_COLORS[side]}
                         onInc={() => adjustGames(side, 1)}
                         onDec={() => adjustGames(side, -1)}
-                        fontSize="26px"
-                        cardWidth="76px"
-                        cardHeight="60px"
+                        fontSize="18px"
+                        cardWidth="58px"
+                        cardHeight="54px"
                         disabled={!!winner}
                       />
                     </>
@@ -240,9 +235,9 @@ function SoftTennisScoreboard() {
                         colorMain={TEAM_COLORS[side]}
                         onInc={() => adjustGames(side, 1)}
                         onDec={() => adjustGames(side, -1)}
-                        fontSize="26px"
-                        cardWidth="76px"
-                        cardHeight="60px"
+                        fontSize="18px"
+                        cardWidth="58px"
+                        cardHeight="54px"
                         disabled={!!winner}
                       />
                       <ScoreCard
@@ -250,9 +245,9 @@ function SoftTennisScoreboard() {
                         colorMain={TEAM_COLORS[side]}
                         onInc={() => incPoint(side)}
                         onDec={() => decPoint(side)}
-                        fontSize="52px"
-                        cardWidth="128px"
-                        cardHeight="100px"
+                        fontSize="32px"
+                        cardWidth="82px"
+                        cardHeight="82px"
                         disabled={!!winner}
                       />
                     </>
@@ -260,7 +255,7 @@ function SoftTennisScoreboard() {
                 </div>
               </div>
               {i === 0 && (
-                <div style={{ width: "1px", alignSelf: "stretch", background: "#232330" }} />
+                <div style={{ width: "1px", alignSelf: "stretch", background: "#31445e" }} />
               )}
             </div>
           ))}
@@ -271,7 +266,7 @@ function SoftTennisScoreboard() {
             style={{
               position: "absolute",
               inset: 0,
-              background: "rgba(0,0,0,0.82)",
+              background: "rgba(22,34,58,0.92)",
               borderRadius: "16px",
               display: "flex",
               flexDirection: "column",
@@ -280,18 +275,18 @@ function SoftTennisScoreboard() {
               gap: "14px",
             }}
           >
-            <div style={{ fontSize: "18px", fontWeight: 800, color: "#ffd166" }}>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#ffd166" }}>
               チーム{winner === "A" ? "1" : "2"} の勝利
             </div>
             <button
               onClick={() => resetMatch(format)}
               style={{
-                padding: "8px 20px",
+                padding: "8px 18px",
                 borderRadius: "999px",
                 border: "1.5px solid #a78bfa",
                 background: "rgba(167,139,250,0.18)",
                 color: "#c4b5fd",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -308,9 +303,9 @@ function SoftTennisScoreboard() {
           marginTop: "14px",
           padding: "6px 16px",
           borderRadius: "999px",
-          border: "1.5px solid #2a2a35",
-          background: "#16161d",
-          color: "#8a8a99",
+          border: "1.5px solid #31445e",
+          background: "#1f2f47",
+          color: "#93a9c2",
           fontSize: "11px",
           fontWeight: 700,
           cursor: "pointer",
@@ -319,7 +314,7 @@ function SoftTennisScoreboard() {
         試合をリセット
       </button>
 
-      <p style={{ fontSize: "10px", color: "#5a5a68", marginTop: "10px", textAlign: "center", maxWidth: "480px", lineHeight: 1.5 }}>
+      <p style={{ fontSize: "10px", color: "#93a9c2", marginTop: "10px", textAlign: "center", maxWidth: "340px", lineHeight: 1.5 }}>
         青がチーム1、緑がチーム2。大きいカードがポイント、小さいカードがゲーム。カードの上半分タップで+1、下半分タップで-1。
       </p>
     </div>
@@ -334,7 +329,7 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
         width: cardWidth,
         height: cardHeight,
         background: "#f5f2ea",
-        borderRadius: "12px",
+        borderRadius: "10px",
         boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
         overflow: "hidden",
         flexShrink: 0,
@@ -343,15 +338,15 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
       <div
         style={{
           position: "absolute",
-          top: 6,
+          top: 4,
           left: "50%",
           transform: "translateX(-50%)",
           display: "flex",
-          gap: "10px",
+          gap: "7px",
         }}
       >
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#d8d2c2" }} />
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#d8d2c2" }} />
+        <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#d8d2c2" }} />
+        <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#d8d2c2" }} />
       </div>
       <div
         style={{
@@ -384,7 +379,7 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
           cursor: disabled ? "default" : "pointer",
         }}
       >
-        <span style={{ position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: "#b8b0a0" }}>▲</span>
+        <span style={{ position: "absolute", top: 3, left: "50%", transform: "translateX(-50%)", fontSize: 8, color: "#b8b0a0" }}>▲</span>
       </button>
       <button
         onClick={onDec}
@@ -401,9 +396,10 @@ function ScoreCard({ value, colorMain, onInc, onDec, fontSize, cardWidth, cardHe
           cursor: disabled ? "default" : "pointer",
         }}
       >
-        <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: "#b8b0a0" }}>▼</span>
+        <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", fontSize: 8, color: "#b8b0a0" }}>▼</span>
       </button>
     </div>
   );
 }
+
 ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisScoreboard />);
