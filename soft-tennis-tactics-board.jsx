@@ -320,4 +320,4 @@ const btnStyle = {
   cursor: "pointer",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisPositioning />);
+ReactDOM.createRoot(document.getElementById("root")).render(<TacticsBoard />);
