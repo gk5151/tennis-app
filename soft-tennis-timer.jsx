@@ -14,7 +14,7 @@ const fmt = (totalSec) => {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
-export default function SoftTennisTimer() {
+function SoftTennisTimer() {
   const [duration, setDuration] = useState(60);
   const [remaining, setRemaining] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
@@ -324,5 +324,14 @@ const secondaryBtn = {
   fontWeight: 700,
   cursor: "pointer",
 };
+
+window.SoftTennisScoreboard = SoftTennisScoreboard;
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <SoftTennisScoreboard />
+);
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisTimer />);
