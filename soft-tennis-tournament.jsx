@@ -518,4 +518,4 @@ const tbdCardStyle = {
   textAlign: "center",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisPositioning />);
+ReactDOM.createRoot(document.getElementById("root")).render(<TournamentBuilder />);
