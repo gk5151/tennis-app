@@ -324,3 +324,5 @@ const secondaryBtn = {
   fontWeight: 700,
   cursor: "pointer",
 };
+
+ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisPositioning />);
