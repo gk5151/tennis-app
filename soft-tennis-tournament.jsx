@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+const { useState, useRef, useCallback, useEffect } = React;
 
 const STORAGE_KEY = "softtennis_tournament_v1";
 
