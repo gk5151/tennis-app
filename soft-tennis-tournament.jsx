@@ -25,7 +25,7 @@ const roundLabel = (roundIndex, totalRounds) => {
   return `${roundIndex + 1}回戦`;
 };
 
-export default function TournamentBuilder() {
+function TournamentBuilder() {
   const [loaded, setLoaded] = useState(false);
   const [stage, setStage] = useState("setup"); // 'setup' | 'result'
   const [numTeams, setNumTeams] = useState(4);
@@ -517,5 +517,13 @@ const tbdCardStyle = {
   color: "#5a6b80",
   textAlign: "center",
 };
+
+window.SoftTennisScoreboard = SoftTennisScoreboard;
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <SoftTennisScoreboard />
+);
 
 ReactDOM.createRoot(document.getElementById("root")).render(<TournamentBuilder />);
