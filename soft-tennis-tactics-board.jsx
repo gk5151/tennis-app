@@ -45,7 +45,7 @@ const PEN_COLORS = [
 
 const ERASE_RADIUS = 0.5; // メートル
 
-export default function TacticsBoard() {
+function TacticsBoard() {
   const [pieces, setPieces] = useState(DEFAULT_PIECES);
   const [mode, setMode] = useState("move"); // 'move' | 'pen' | 'eraser'
   const [penColor, setPenColor] = useState("#e03131");
@@ -320,4 +320,8 @@ const btnStyle = {
   cursor: "pointer",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<TacticsBoard />);
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <SoftTennisScoreboard />
+);
