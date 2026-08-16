@@ -333,5 +333,3 @@ ReactDOM.createRoot(
   <SoftTennisTimer />
 );
 
-
-ReactDOM.createRoot(document.getElementById("root")).render(<SoftTennisTimer />);
