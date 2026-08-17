@@ -710,4 +710,11 @@ const miniInputStyle = {
   fontFamily: "inherit",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<PracticePlanner />);
+window.PracticePlanner = PracticePlanner;
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <PracticePlanner />
+);
+
