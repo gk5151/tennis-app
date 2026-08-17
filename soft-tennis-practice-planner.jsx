@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+const { useState, useRef, useCallback, useEffect } = React;
 
 const STORAGE_KEY = "softtennis_practice_planner_v2";
 
@@ -43,7 +43,7 @@ const clockToMinutes = (clock) => {
   return Math.max(0, h * 60 + m - DAY_START_HOUR * 60);
 };
 
-export default function PracticePlanner() {
+function PracticePlanner() {
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState("library"); // 'library' | 'schedule'
 
@@ -709,3 +709,5 @@ const miniInputStyle = {
   fontSize: "10px",
   fontFamily: "inherit",
 };
+
+ReactDOM.createRoot(document.getElementById("root")).render(<PracticePlanner />);
