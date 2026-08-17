@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+const { useState, useRef, useCallback, useEffect } = React;
 
 const STORAGE_KEY = "softtennis_resources_v1";
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function ResourceNotebook() {
+function ResourceNotebook() {
   const [loaded, setLoaded] = useState(false);
   const [resources, setResources] = useState([]); // {id, title, url, memo}
 
@@ -190,3 +190,11 @@ const textInputStyle = {
   fontSize: "13px",
   fontFamily: "inherit",
 };
+
+window.ResourceNotebook = ResourceNotebook;
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <ResourceNotebook />
+);
