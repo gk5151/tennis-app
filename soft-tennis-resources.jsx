@@ -18,26 +18,24 @@ function ResourceNotebook() {
   const saveTimer = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await window.storage.get(STORAGE_KEY, false);
-        if (res && res.value) {
-          const data = JSON.parse(res.value);
-          if (data.resources) setResources(data.resources);
-        }
-      } catch (e) {
-        // 初回起動時はデータが無いので無視
-      } finally {
-        setLoaded(true);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.resources) setResources(data.resources);
       }
-    })();
+    } catch (e) {
+      // 初回起動時はデータが無いので無視
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
   const persist = useCallback((next) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
+    saveTimer.current = setTimeout(() => {
       try {
-        await window.storage.set(STORAGE_KEY, JSON.stringify(next), false);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch (e) {
         // 保存失敗時も操作は継続
       }

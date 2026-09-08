@@ -68,28 +68,26 @@ function PracticePlanner() {
   const saveTimer = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await window.storage.get(STORAGE_KEY, false);
-        if (res && res.value) {
-          const data = JSON.parse(res.value);
-          if (data.notes) setNotes(data.notes);
-          if (data.schedule) setSchedule(data.schedule);
-          if (data.savedSchedules) setSavedSchedules(data.savedSchedules);
-        }
-      } catch (e) {
-        // 初回は保存データが無いので無視
-      } finally {
-        setLoaded(true);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.notes) setNotes(data.notes);
+        if (data.schedule) setSchedule(data.schedule);
+        if (data.savedSchedules) setSavedSchedules(data.savedSchedules);
       }
-    })();
+    } catch (e) {
+      // 初回は保存データが無いので無視
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
   const persist = useCallback((next) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
+    saveTimer.current = setTimeout(() => {
       try {
-        await window.storage.set(STORAGE_KEY, JSON.stringify(next), false);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch (e) {
         // 保存失敗時も操作は継続
       }
@@ -717,4 +715,3 @@ ReactDOM.createRoot(
 ).render(
   <PracticePlanner />
 );
-
